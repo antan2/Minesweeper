@@ -166,11 +166,11 @@ public class MSButton
     if (!gameLost && !isWon()) {
       if (!firstClick) {
         clicked = true;
-        if (mouseButton == RIGHT && (myLabel == "" || myLabel == "M")) {
+        if (mouseButton == RIGHT && (myLabel.equals("") || myLabel.equals("M"))) {
           flagged = !flagged;
           if (!flagged)
             clicked = false;
-          if (!mines.contains(buttons [myRow][myCol])) {
+          if (!mines.contains(buttons [myRow][myCol]) && myLabel.equals("")) {
             displayLosingMessage();
             gameLost = true;
           }
@@ -237,6 +237,10 @@ public class MSButton
   public void setClicked(boolean newClick)
   {
     clicked = newClick;
+  }
+  public void setFlagged(boolean newFlag)
+  {
+    flagged = newFlag;
   }
 }
 public void move()
@@ -313,16 +317,3 @@ public void reset() {
       buttons [r][c] = new MSButton (r, c);
   setMines();
 }
-public void keyPressed() {
-  if (keyCode == 32 && (isWon() || gameLost)) {
-    for (int r = 0; r < NUM_ROWS; r++)
-      for (int c = 0; c < NUM_COLS; c++)
-        buttons [r][c] = new MSButton (r, c);
-    setMines();
-    firstClick = true;
-    t = 500;
-    time = 0;
-    gameLost = false;
-  }
-}
-
