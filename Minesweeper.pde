@@ -2,28 +2,22 @@ import de.bezier.guido.*;
 //Declare and initialize constants NUM_ROWS and NUM_COLS = 20
 private MSButton[][] buttons; //2d array of minesweeper buttons
 public int NUM_ROWS = 20;
-public int NUM_COLS = 20;
-public int NUM_MINES = 80;
+public int NUM_COLS = NUM_ROWS;
+public int NUM_MINES = NUM_ROWS * NUM_COLS /10;
 private ArrayList <MSButton> mines = new ArrayList <MSButton>(); //ArrayList of just the minesweeper buttons that are mined
 
 public boolean gameLost = false;
 public boolean firstClick = true;
 public int t = 500;
+public int time = 0;
+public boolean start = false;
+public String diff = "medium";
+public boolean mouse = false;
 
 void setup ()
 {
   size(800, 900);
   textAlign(CENTER, CENTER);
-
-  // make the manager
-  Interactive.make( this );
-
-  //your code to initialize buttons goes here
-  buttons = new MSButton [NUM_ROWS][NUM_COLS];
-  for (int r = 0; r < NUM_ROWS; r++)
-    for (int c = 0; c < NUM_COLS; c++)
-      buttons [r][c] = new MSButton (r, c);
-  setMines();
 }
 public void setMines()
 {
@@ -43,16 +37,72 @@ public void setMines()
 public void draw ()
 {
   background( 0 );
-  if (isWon() == true)
-    displayWinningMessage();
-  if(!gameLost && !isWon()){
-    t--;
-    if(t<0){
+  if (start) {
+    if (isWon() == true)
+      displayWinningMessage();
+    if (!gameLost && !isWon() && !firstClick && t> 0) {
+      t--;
+    }
+    if (t<=0 && !mousePressed) {
       move();
       t=500;
     }
+    if (!gameLost && !isWon() && !firstClick) {
+      time++;
+    }
+    ui();
+  } else {
+    fill(255, 255, 255);
+    textAlign(CENTER, CENTER);
+    textSize(50);
+    text("difficulty: " + diff, 400, 300);
+    if (diff.equals("easy")) {
+      NUM_ROWS = 10;
+    } else if (diff.equals("medium")) {
+      NUM_ROWS = 20;
+    } else if (diff.equals("hard")) {
+      NUM_ROWS = 40;
+    }
+    NUM_COLS = NUM_ROWS;
+    NUM_MINES = NUM_ROWS * NUM_COLS /10;
+    text("grid: " + NUM_ROWS + " x " + NUM_ROWS, 400, 500);
+    text("mines: " + NUM_MINES, 400, 600);
+    triangle(400, 200, 425, 225, 375, 225);
+    triangle(400, 400, 425, 375, 375, 375);
+    ellipse(400, 700, 100, 100);
+    fill(0, 0, 0);
+    textSize(25);
+    text("START", 400, 700);
+    if (mousePressed) {
+      if (!mouse) {
+        if (dist(mouseX, mouseY, 400, 212.5) < 25) {
+          if (diff.equals("easy")) {
+            diff = "medium";
+          } else if (diff.equals("medium")) {
+            diff = "hard";
+          } else {
+            diff = "easy";
+          }
+        }
+        if (dist(mouseX, mouseY, 400, 387.5) < 25) {
+          if (diff.equals("medium")) {
+            diff = "easy";
+          } else if (diff.equals("hard")) {
+            diff = "medium";
+          } else {
+            diff = "hard";
+          }
+        }
+        if (dist(mouseX, mouseY, 400, 700) < 50) {
+          gameStart();
+          start = true;
+        }
+      }
+      mouse = true;
+    } else {
+      mouse = false;
+    }
   }
-  ui();
 }
 public boolean isWon()
 {
@@ -65,14 +115,13 @@ public boolean isWon()
 public void displayLosingMessage()
 {
   for (int i = 0; i < mines.size(); i++) {
-    if (!mines.get(i).isClicked()){
+    if (!mines.get(i).isClicked()) {
       mines.get(i).setClicked(true);
     }
   }
 }
 public void displayWinningMessage()
 {
-
 }
 public boolean isValid(int row, int col)
 {
@@ -121,7 +170,7 @@ public class MSButton
           flagged = !flagged;
           if (!flagged)
             clicked = false;
-          if(!mines.contains(buttons [myRow][myCol])){
+          if (!mines.contains(buttons [myRow][myCol])) {
             displayLosingMessage();
             gameLost = true;
           }
@@ -153,7 +202,9 @@ public class MSButton
   }
   public void draw () 
   {    
-    if (flagged)
+    if (flagged && !mines.contains(this))
+      fill(255, 200, 200);
+    else if (flagged)
       fill(0);
     else if ( clicked && mines.contains(this) ) 
       fill(255, 0, 0);
@@ -222,17 +273,56 @@ public void move()
     }
   }
 }
-public void ui(){
+public void ui() {
   fill(255, 255, 255);
   textSize(25);
   textAlign(LEFT, CENTER);
-  text("Time to next shift: " + t, 15, 850);
-  textAlign(RIGHT,CENTER);
-  if(isWon()){
+  text("Time to next shift: " + t, 15, 875);
+  text("Time: " + time, 15, 825);
+  textAlign(RIGHT, CENTER);
+  if (isWon()) {
     text("Congratulations! You Won! :)", 785, 850);
-  }
-  if(gameLost){
+  } else if (gameLost) {
     text("You Lost :(", 785, 850);
+  } else {
+    int tempn = 0;
+    for (int i = 0; i < mines.size(); i++) {
+      if (!mines.get(i).isFlagged()) {
+        tempn++;
+      }
+    }
+    text("Temporal Mines remaining: " + tempn, 785, 850);
+  }
+}
+public void gameStart() {
+  // make the manager
+  Interactive.make( this );
+
+  //your code to initialize buttons goes here
+
+  buttons = new MSButton [NUM_ROWS][NUM_COLS];
+  for (int r = 0; r < NUM_ROWS; r++)
+    for (int c = 0; c < NUM_COLS; c++)
+      buttons [r][c] = new MSButton (r, c);
+  setMines();
+}
+public void reset() {
+  buttons = new MSButton [NUM_ROWS][NUM_COLS];
+  for (int r = 0; r < NUM_ROWS; r++)
+    for (int c = 0; c < NUM_COLS; c++)
+      buttons [r][c] = new MSButton (r, c);
+  setMines();
+}
+public void keyPressed() {
+  if (keyCode == 32 && (isWon() || gameLost)) {
+    for (int r = 0; r < NUM_ROWS; r++)
+      for (int c = 0; c < NUM_COLS; c++)
+        buttons [r][c] = new MSButton (r, c);
+    setMines();
+    firstClick = true;
+    t = 500;
+    time = 0;
+    gameLost = false;
   }
 }
 
