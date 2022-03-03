@@ -310,10 +310,4 @@ public void gameStart() {
       buttons [r][c] = new MSButton (r, c);
   setMines();
 }
-public void reset() {
-  buttons = new MSButton [NUM_ROWS][NUM_COLS];
-  for (int r = 0; r < NUM_ROWS; r++)
-    for (int c = 0; c < NUM_COLS; c++)
-      buttons [r][c] = new MSButton (r, c);
-  setMines();
-}
+
