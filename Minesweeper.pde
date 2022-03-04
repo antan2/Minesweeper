@@ -13,6 +13,7 @@ public int time = 0;
 public boolean start = false;
 public String diff = "medium";
 public boolean mouse = false;
+public boolean moving = false;
 
 void setup ()
 {
@@ -42,10 +43,13 @@ public void draw ()
       displayWinningMessage();
     if (!gameLost && !isWon() && !firstClick && t> 0) {
       t--;
+      if (t <= 500) {
+        moving = false;
+      }
     }
     if (t<=0 && !mousePressed) {
       move();
-      t=500;
+      t=525;
     }
     if (!gameLost && !isWon() && !firstClick) {
       time++;
@@ -163,7 +167,7 @@ public class MSButton
   // called by manager
   public void mousePressed () 
   {
-    if (!gameLost && !isWon()) {
+    if (!gameLost && !isWon() && !moving) {
       if (!firstClick) {
         clicked = true;
         if (mouseButton == RIGHT && (myLabel.equals("") || myLabel.equals("M"))) {
@@ -184,7 +188,7 @@ public class MSButton
           for (int r = myRow -1; r <= myRow+1; r++)
             for (int c = myCol -1; c <= myCol+1; c++)
               if (isValid(r, c) && !buttons[r][c].isClicked())
-                buttons[r][c].mousePressed();
+                buttons[r][c].reveal();
         }
       } else {
         firstClick = false;
@@ -196,7 +200,22 @@ public class MSButton
         for (int r = myRow -1; r <= myRow+1; r++)
           for (int c = myCol -1; c <= myCol+1; c++)
             if (isValid(r, c) && !buttons[r][c].isClicked())
-              buttons[r][c].mousePressed();
+              buttons[r][c].reveal();
+      }
+    }
+  }
+  public void reveal()
+  {
+    if (!gameLost && !isWon()) {
+      clicked = true;
+      if (countMines(myRow, myCol)>0) {
+        setLabel(countMines(myRow, myCol));
+      } else {
+        setLabel(" ");
+        for (int r = myRow -1; r <= myRow+1; r++)
+          for (int c = myCol -1; c <= myCol+1; c++)
+            if (isValid(r, c) && !buttons[r][c].isClicked())
+              buttons[r][c].reveal();
       }
     }
   }
@@ -245,6 +264,7 @@ public class MSButton
 }
 public void move()
 {
+  moving = true;
   for (int i = mines.size()-1; i >= 0; i--) {
     if (!mines.get(i).isFlagged()) {
       mines.remove(i);
@@ -268,7 +288,7 @@ public void move()
           buttons[r][c].setLabel(countMines(r, c));
         } else {
           buttons[r][c].setLabel(" ");
-          buttons[r][c].mousePressed();
+          buttons[r][c].reveal();
         }
       }
       if (mines.contains(buttons[r][c])) {
@@ -281,7 +301,11 @@ public void ui() {
   fill(255, 255, 255);
   textSize(25);
   textAlign(LEFT, CENTER);
-  text("Time to next shift: " + t, 15, 875);
+  if (moving) {
+    text("Shifting in process", 15, 875);
+  } else {
+    text("Time to next shift: " + t, 15, 875);
+  }
   text("Time: " + time, 15, 825);
   textAlign(RIGHT, CENTER);
   if (isWon()) {
@@ -310,4 +334,3 @@ public void gameStart() {
       buttons [r][c] = new MSButton (r, c);
   setMines();
 }
-
